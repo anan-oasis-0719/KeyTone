@@ -15,14 +15,16 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
     
     let musicArray:[String] = ["C","D","E","F","G","A","B",]
     var index: Int = 0 // ダイヤルで再生する音の添字
-    let keytoneArray:[String] = []
+    let keytoneArray:[Int] = []//ここ大丈夫？？？
     var keytoneindex: Int! // viewDidLoadで設定する
     
     var keytonenumber: Int = 3
-    var zankitonenumber: Int = 0
+    var kaijonumber: Int = 3
     var zankinumber: Int = 3
     
-    var keytoneLevel: Int = 3 //３連の正解音
+    var SeikaiNumber: Int = 0
+    
+    let keytoneLevel: Int = 3 //３連の正解音
     var keyArray:[Int] = [] //３連の正解音を格納する配列
     var loopTimes: Int! = 0 // 残りのループ回数
     
@@ -32,6 +34,11 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
     @IBOutlet var hanteiLabel: UILabel!
     @IBOutlet var keytoneLabel: UILabel!
     @IBOutlet var zankiLabel: UILabel!
+    @IBOutlet var BackImage: UIImageView!
+    
+    @IBOutlet var firstLabel:UILabel!
+    @IBOutlet var secondLabel:UILabel!
+    @IBOutlet var thirdLabel:UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,9 +48,8 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
         // 正解音の決定
         //        keytoneindex = Int(arc4random_uniform(UInt32(7)))
         keyArray = [] //　初期化
-        for i in 0 ..< keytoneLevel { //３なら３回ループ
+        for _ in 0 ..< keytoneLevel { //３なら３回ループ
             keyArray.append(Int(arc4random_uniform(UInt32(7))))
-            print(keyArray[i])
         }
         
         keytoneLabel.text = "×\(keytonenumber)"
@@ -55,6 +61,7 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
         audioPlayer.prepareToPlay()
         audioPlayer.play()
         
+        
     }
     
     override func didReceiveMemoryWarning() {
@@ -64,6 +71,21 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
     
     // 右上：キートーンが押された時のメソッド
     @IBAction func keytone() {
+        
+        firstLabel.text = "リセットされました"
+        secondLabel.text = "リセットされました"
+        thirdLabel.text = "リセットされました"
+        
+        selectArray.removeAll()
+        SeikaiNumber = 0
+        kaijonumber = 3
+        
+        let alertController = UIAlertController(title: "リセットされました", message: "また最初から音を探してください", preferredStyle: .Alert)
+        
+        let defaultAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+        alertController.addAction(defaultAction)
+        
+        presentViewController(alertController, animated: true, completion: nil)
         
         //キートーンの残り回数が１回以上あったら
         if keytonenumber > 0 {
@@ -97,11 +119,8 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
         
         let music = NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource(musicArray[index], ofType: "mp3")!)
         
-//        do {
-            audioPlayer = try! AVAudioPlayer(contentsOfURL: music)
-//        } catch {
-//            // couldn't load file :(
-//        }
+        audioPlayer = try! AVAudioPlayer(contentsOfURL: music)
+        
         audioPlayer.prepareToPlay()
         audioPlayer.play()
     }
@@ -117,11 +136,7 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
         
         let music = NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource(musicArray[index], ofType: "mp3")!)
         
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOfURL: music)
-        } catch {
-            // couldn't load file :(
-        }
+        audioPlayer = try! AVAudioPlayer(contentsOfURL: music)
         audioPlayer.prepareToPlay()
         audioPlayer.play()
         
@@ -145,53 +160,115 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
     
     // 「決定」ボタンが押された時のメソッド
     @IBAction func Serect(){
-        
         selectArray.append(index)
         
-        // 正誤判定
+        print("selectArrayの個数\(selectArray.count)")
+        print("keyArrayの個数\(keytoneArray.count)")
+        print("seikaiNumber\(SeikaiNumber)")
+        print("keyArray[" + String(SeikaiNumber) + "] = " + String(keyArray[SeikaiNumber]))
+        print("selectArray[" + String(SeikaiNumber) + "] = " + String(selectArray[SeikaiNumber]))
+        print("keyArray\(keyArray)")
+        print("selectArray\(selectArray)")
         
-        let lastTime: Int = keytoneLevel-1
-        for i in 0 ..< selectArray.count {
-            if selectArray[i] != keyArray[i] {
-                hanteiLabel.text = "違います！"
-                selectArray = [] // 初期化
-                zankinumber = zankinumber-1
+        
+        if selectArray[SeikaiNumber] == keyArray[SeikaiNumber] {
+            SeikaiNumber = SeikaiNumber + 1
+            
+            print("正解！")
+            
+            hanteiLabel.text = "次の音を選んで「決定」せよ"
+            
+            kaijonumber = kaijonumber - 1
+            
+            Lock()
+            
+            
+            let music = NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("Quiz-Buzzer01-1", ofType: "mp3")!)
+            
+            
+            
+            do {
                 
-                if zankinumber <= 0 {
-                    
-                    performSegueWithIdentifier("a",sender: nil)
-                    
-                }
+                audioPlayer = try AVAudioPlayer(contentsOfURL: music)
                 
-                if zankinumber  == 1 {
-                    
-                    zankiLabel.textColor = UIColor.redColor()
-                    
-                }
-                    
-                else if zankinumber  == 2 {
-                    
-                    zankiLabel.textColor = UIColor.orangeColor()
-                    
-                }
+            } catch {
                 
-                zankiLabel.text = "残機×\(zankinumber)"
-                break
-            } else {
-                hanteiLabel.text = "次の音を選んで「決定」せよ"
+                // couldn't load file :(
+                
+            }
+            
+            audioPlayer.prepareToPlay()
+            
+            audioPlayer.play()
+            
+        }else {
+            
+            hanteiLabel.text = "違います！"
+            print("不正解")
+            
+            let music = NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("Quiz-Wrong_Buzzer02-3", ofType: "mp3")!)
+            
+            
+            
+            do {
+                
+                audioPlayer = try AVAudioPlayer(contentsOfURL: music)
+                
+            } catch {
+                
+                // couldn't load file :(
+                
+            }
+            
+            //audioPlayer.prepareToPlay()
+            audioPlayer.play()
+            
+            let secondCheck = selectArray.isEmpty
+            
+            if secondCheck != true {
+                selectArray.removeLast()
             }
             
             
-            if i == lastTime {
-                if selectArray[lastTime] == keyArray[lastTime] {
-                    // 正解画面に遷移
-                    performSegueWithIdentifier("b",sender: nil)
-                }
+            zankinumber = zankinumber-1
+            
+            if zankinumber <= 0 {
+                
+                performSegueWithIdentifier("a",sender: nil)
+                
+                //ゲームオーバー画面に遷移
+                
             }
+            
+            if zankinumber  == 1 {
+                
+                zankiLabel.textColor = UIColor.redColor()
+                
+            }
+                
+            else if zankinumber  == 2 {
+                
+                zankiLabel.textColor = UIColor.orangeColor()
+                
+            }
+            
+            zankiLabel.text = "残機×\(zankinumber)"
+            
         }
         
-        
-        
+        if SeikaiNumber == 3 {
+            
+            performSegueWithIdentifier("b",sender: nil)
+            let music = NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("nc48321", ofType: "wav")!)
+            
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOfURL: music)
+            } catch {
+                // couldn't load file :(
+            }
+            audioPlayer.prepareToPlay()
+            audioPlayer.play()
+        }
     }
     
     func setMusic(index: Int){
@@ -201,11 +278,7 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
         let fileURL : NSURL = NSURL(fileURLWithPath: soundFilePath as String)
         
         //AVAudioPlayerのインスタンス化
-        do{
-            audioPlayer = try AVAudioPlayer(contentsOfURL: fileURL, fileTypeHint:nil)
-        }catch{
-            print("失敗：Failed AVAudioPlayer Instance")
-        }
+        audioPlayer = try! AVAudioPlayer(contentsOfURL: fileURL, fileTypeHint:nil)
         
         //AVAudioPlayerのデリゲートをセット.
         audioPlayer.delegate = self
@@ -217,21 +290,22 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
         
         let labeltxt : String = hanteiLabel.text!
         switch labeltxt {
-            case "C":
-                hanteiLabel.text = "ド"
-            case "D":
-                hanteiLabel.text = "レ"
-            case "E":
-                hanteiLabel.text = "ミ"
-            case "F":
-                hanteiLabel.text = "ファ"
-            case "G":
-                hanteiLabel.text = "ソ"
-            case "A":
-                hanteiLabel.text = "ラ"
-            case "B":
-                hanteiLabel.text = "シ"
-            default:break
+        case "C":
+            hanteiLabel.text = "ド"
+        case "D":
+            hanteiLabel.text = "レ"
+        case "E":
+            hanteiLabel.text = "ミ"
+        case "F":
+            hanteiLabel.text = "ファ"
+        case "G":
+            hanteiLabel.text = "ソ"
+        case "A":
+            hanteiLabel.text = "ラ"
+        case "B":
+            hanteiLabel.text = "シ"
+        default:break
+            
         }
         
     }
@@ -242,6 +316,27 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
             setMusic(keyArray[3 - loopTimes])
             loopTimes = loopTimes - 1
             audioPlayer.play()
+        }
+    }
+    
+    func Lock() {
+        
+        print ("kaijonumber\(kaijonumber)")
+        
+        if kaijonumber == 2 {
+            
+            firstLabel.text = "ロック解除"
+            
+        }
+        
+        if kaijonumber == 1 {
+            
+            secondLabel.text = "ロック解除"
+            
+        }
+        
+        if kaijonumber == 0 {
+            thirdLabel.text = "ロック解除"
         }
     }
     
