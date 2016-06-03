@@ -22,7 +22,6 @@ class ViewController: UIViewController,AVAudioPlayerDelegate {
     var kaijonumber: Int = 3
     var zankinumber: Int = 3
     
-    
     var SeikaiNumber: Int = 0
     
     let keytoneLevel: Int = 3 //３連の正解音
